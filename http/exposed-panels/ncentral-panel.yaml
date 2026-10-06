@@ -1,7 +1,7 @@
-id: n-able-ncentral-detect
+id: ncentral-panel
 
 info:
-  name: N-able N-central Detection
+  name: N-central Login Panel - Detect
   author: theabhinavgaur,dooniess
   severity: info
   description: |
