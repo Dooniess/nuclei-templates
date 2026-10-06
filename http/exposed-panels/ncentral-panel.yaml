@@ -1,17 +1,24 @@
-id: ncentral-panel
+id: n-able-ncentral-detect
 
 info:
-  name: N-central Login Panel - Detect
-  author: theabhinavgaur
+  name: N-able N-central Detection
+  author: theabhinavgaur,dooniess
   severity: info
-  description: N-central login panel was detected.
+  description: |
+    Detects the presence of N-able N-central remote monitoring and management (RMM) solution.
+    N-central is a cloud-based RMM platform used by MSPs to monitor and manage client infrastructure.
+  reference:
+    - https://www.n-able.com/products/n-central
+    - https://documentation.n-able.com/N-central/
   classification:
-    cvss-metrics: CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:N
+    cvss-metrics: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:N
     cwe-id: CWE-200
     cpe: cpe:2.3:a:n-able:n-central:*:*:*:*:*:*:*:*
   metadata:
     verified: true
-    max-request: 1
+    max-request: 2
+    vendor: n-able
+    product: n-central
     shodan-query:
       - http.title:"N-central Login"
       - http.favicon.hash:1519363246
@@ -22,29 +29,59 @@ info:
       - icon_hash="1519363246"
       - icon_hash="1937353549"
       - "Set-Cookie: ncentral_version="
-    product: n-central
-    vendor: n-able
-  tags: panel,n-central,discovery
+  tags: discovery,n-able,n-central,rmm,panel
 
 http:
   - method: GET
     path:
       - "{{BaseURL}}/login"
+      - "{{BaseURL}}/"
 
-    matchers-condition: and
+    host-redirects: true
+    max-redirects: 2
+    stop-at-first-match: true
+
+    matchers-condition: or
     matchers:
+      - type: word
+        part: body
+        words:
+          - '<title>N-able N-central Remote Monitoring &amp; Management Solution</title>'
+          - 'N-able N-central Remote Monitoring'
+        condition: or
+
+      - type: word
+        part: body
+        words:
+          - 'ncentralVersion:'
+          - '/stylesheets/login.css'
+          - 'Enter your username'
+        condition: and
+
+      - type: word
+        part: body
+        words:
+          - 'nable/Login'
+          - 'loginLoginAction.action'
+        condition: and
+
       - type: word
         part: body
         words:
           - 'class="ncentral"'
 
-      - type: status
-        status:
-          - 200
-
     extractors:
       - type: regex
+        name: version
         group: 1
         regex:
-          - "ncentralVersion:\\s+\"([\\d\\.]+)\","
-# digest: 4a0a00473045022100e271ce2bb8d40920a4ee8549348e9159db4d584d75c8ce3672344c36a563ed9c022006f0540097ee802a1fe30a8cfddc85b747a4d4a10d459433e88d6f409e8bcee3:922c64590222798bb761d5b6d8e72950
+          - 'ncentralVersion:\s*"([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)"'
+          - 'cacheBust:\s*"([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)"'
+        part: body
+
+      - type: regex
+        name: title
+        group: 1
+        regex:
+          - '<title>([^<]*N-central[^<]*)</title>'
+        part: body
