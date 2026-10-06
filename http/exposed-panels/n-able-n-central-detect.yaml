@@ -1,0 +1,81 @@
+id: n-able-ncentral-detect
+
+info:
+  name: N-able N-central Detection
+  author: dooniess
+  severity: info
+  description: |
+    Detects the presence of N-able N-central remote monitoring and management (RMM) solution.
+    N-central is a cloud-based RMM platform used by MSPs to monitor and manage client infrastructure.
+  reference:
+    - https://www.n-able.com/products/n-central
+    - https://documentation.n-able.com/N-central/
+  classification:
+    cvss-metrics: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:N
+    cvss-score: 0.0
+    cwe-id: CWE-200
+  metadata:
+    verified: true
+    max-request: 2
+    vendor: n-able
+    product: n-central
+    shodan-query:
+      - http.title:"N-central Login"
+      - http.favicon.hash:1519363246
+      - http.favicon.hash:1937353549
+      - "Set-Cookie: ncentral_version="
+    fofa-query:
+      - title="N-central Login"
+      - icon_hash="1519363246"
+      - icon_hash="1937353549"
+      - "Set-Cookie: ncentral_version="
+  tags: discovery,n-able,n-central,rmm,panel
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/login"
+      - "{{BaseURL}}/"
+
+    host-redirects: true
+    max-redirects: 2
+
+    matchers-condition: or
+    matchers:
+      - type: word
+        part: body
+        words:
+          - '<title>N-able N-central Remote Monitoring &amp; Management Solution</title>'
+          - 'N-able N-central Remote Monitoring'
+        condition: or
+
+      - type: word
+        part: body
+        words:
+          - 'ncentralVersion:'
+          - '/stylesheets/login.css'
+          - 'Enter your username'
+        condition: and
+
+      - type: word
+        part: body
+        words:
+          - 'nable/Login'
+          - 'loginLoginAction.action'
+        condition: and
+
+    extractors:
+      - type: regex
+        name: version
+        group: 1
+        regex:
+          - 'ncentralVersion:\s*"([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)"'
+          - 'cacheBust:\s*"([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)"'
+        part: body
+
+      - type: regex
+        name: title
+        group: 1
+        regex:
+          - '<title>([^<]+N-central[^<]+)</title>'
+        part: body
